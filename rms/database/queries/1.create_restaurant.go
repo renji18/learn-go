@@ -1,0 +1,11 @@
+package queries
+
+var Query1_Create_Restaurant = `
+	CREATE TABLE restaurant (
+		id SERIAL PRIMARY KEY,
+		name VARCHAR(100) NOT NULL UNIQUE,
+		created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+	);
+`
+
+// THIS MIGRATION IS APPLIED, DO NOT MODIFY THIS FILE

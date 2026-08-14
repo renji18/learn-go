@@ -1,0 +1,45 @@
+services:
+  db:
+    image: postgres:17-alpine
+    container_name: go_rms_pg
+    ports:
+      - "5439:5432"
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_DB=go_rms
+    volumes:
+      - go_rms_pg_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d myapp_db"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  pgadmin:
+    image: dpage/pgadmin4
+    container_name: go_rms_pg_admin
+    environment:
+      PGADMIN_DEFAULT_EMAIL: postgres@postgres.com
+      PGADMIN_DEFAULT_PASSWORD: postgres
+    ports:
+      - "5059:80"
+    depends_on:
+      db:
+        condition: service_healthy
+
+  redis:
+    image: redis:8
+    container_name: go_rms_redis
+    ports:
+      - "6399:6379"
+    volumes:
+      - redisdata:/data
+    command: redis-server --appendonly yes
+    depends_on:
+      db:
+        condition: service_healthy
+
+volumes:
+  go_rms_pg_data:
+  redisdata:

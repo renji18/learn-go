@@ -1,0 +1,9 @@
+package queries
+
+var Query4_Is_Admin_And_Email = `
+	ALTER TABLE users ADD COLUMN is_admin BOOLEAN DEFAULT FALSE;
+
+	ALTER TABLE users DROP COLUMN phone;
+
+	ALTER TABLE users ADD COLUMN email TEXT NOT NULL UNIQUE;
+`
