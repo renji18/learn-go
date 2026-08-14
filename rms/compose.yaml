@@ -11,10 +11,12 @@ services:
     volumes:
       - go_rms_pg_data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres -d myapp_db"]
+      test: ["CMD-SHELL", "pg_isready -U postgres -d go_rms"]
       interval: 5s
       timeout: 5s
       retries: 5
+    # networks:
+    #   - go_rms_network
 
   pgadmin:
     image: dpage/pgadmin4
@@ -27,6 +29,8 @@ services:
     depends_on:
       db:
         condition: service_healthy
+    # networks:
+    #   - go_rms_network
 
   redis:
     image: redis:8
@@ -36,10 +40,34 @@ services:
     volumes:
       - redisdata:/data
     command: redis-server --appendonly yes
-    depends_on:
-      db:
-        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    # networks:
+    #   - go_rms_network
+
+  # go:
+  #   image: golang:tip-trixie
+  #   container_name: go_golang
+  #   ports:
+  #     - "4000:4000"
+  #   volumes:
+  #     - .:/app
+  #   working_dir: /app
+  #   command: go run main.go
+  #   depends_on:
+  #     redis:
+  #       condition: service_healthy
+  #     db:
+  #       condition: service_healthy
+  #   networks:
+  #     - go_rms_network
 
 volumes:
   go_rms_pg_data:
   redisdata:
+
+# networks:
+#   go_rms_network:

@@ -17,6 +17,8 @@ type EnvConfig struct {
 	REFRESH_COOKIE_NAME string
 	EMAIL_FROM          string
 	EMAIL_PASSWORD      string
+	REDIS_ADDR          string
+	REDIS_PORT          string
 }
 
 var Config EnvConfig
@@ -77,6 +79,12 @@ func ParseConfig() {
 
 		case "EMAIL_PASSWORD":
 			Config.EMAIL_PASSWORD = value
+
+		case "REDIS_ADDR":
+			Config.REDIS_ADDR = value
+
+		case "REDIS_PORT":
+			Config.REDIS_PORT = value
 		}
 	}
 

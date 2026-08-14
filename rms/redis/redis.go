@@ -14,7 +14,7 @@ var RedisClient *redis.Client
 
 func InitializeRedis() {
 	RedisClient = redis.NewClient(&redis.Options{
-		Addr:     "localhost:6399",
+		Addr:     utils.Config.REDIS_ADDR + ":" + utils.Config.REDIS_PORT,
 		Password: "",
 		DB:       0,
 	})
