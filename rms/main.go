@@ -10,6 +10,7 @@ import (
 	"github.com/renji18/rms/modules/auth"
 	"github.com/renji18/rms/modules/menu"
 	"github.com/renji18/rms/modules/restaurant"
+	"github.com/renji18/rms/modules/table"
 	"github.com/renji18/rms/redis"
 	"github.com/renji18/rms/utils"
 )
@@ -44,6 +45,7 @@ func main() {
 	auth.AuthRouter(appMux)
 	restaurant.RestaurantRouter(appMux)
 	menu.MenuRouter(appMux)
+	table.TableRouter(appMux)
 
 	// Register app mux in default mux
 	mux.Handle("/api/", http.StripPrefix("/api", appMux))

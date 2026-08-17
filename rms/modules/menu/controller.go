@@ -23,7 +23,7 @@ func AddMenuItem(w http.ResponseWriter, r *http.Request) {
 	var itemBody schema.MenuItem
 	err = json.NewDecoder(r.Body).Decode(&itemBody)
 	if err != nil {
-		utils.SendJson(w, 404, "Invalid json provided"+err.Error(), nil)
+		utils.SendJson(w, 404, "Invalid json provided "+err.Error(), nil)
 		return
 	}
 

@@ -41,11 +41,11 @@ type MenuItem struct {
 
 type RTable struct {
 	ID           string `json:"id"`
-	Number       int    `json:"table_number"`
+	TableNumber  int    `json:"table_number"`
 	ChairCount   int    `json:"chair_count"`
 	Occupied     bool   `json:"occupied"`
 	Reserved     bool   `json:"reserved"`
-	RestaurantId string `json:"restaurant_id"`
+	RestaurantId string `json:"restaurant_id,omitempty"`
 }
 
 func (r Restaurant) IsEmpty() bool {
@@ -57,5 +57,5 @@ func (m MenuItem) IsEmpty() bool {
 }
 
 func (rt RTable) IsEmpty() bool {
-	return rt.Number == 0 || rt.ChairCount == 0
+	return rt.TableNumber == 0 || rt.ChairCount == 0
 }
