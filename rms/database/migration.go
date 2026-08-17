@@ -17,7 +17,7 @@ var updateVersionInTable = `UPDATE schema_version SET version = $1`
 
 // DEVELOPER RESPONSIBILITY
 // The Validation and Migration function only work as expected, if this number is accurate. If there are 7 levels of migration, but this variable is at 5, then only the first 5 migrations will be validated/applied, and the application will startup successfully, but the database will remain out of sync.
-var schemaVersion = 6
+var schemaVersion = 8
 
 // This fn applies and syncs migration
 func Migration() {
@@ -58,6 +58,16 @@ func Migration() {
 		_, err := DB.Exec(queries.Query6_Remove_Temp_Fields_From_Auth)
 		utils.Fatal(fmt.Errorf("Error applying sixth migration: %v", err), err)
 		fmt.Println("Migrated to version 6")
+
+	case 7:
+		_, err := DB.Exec(queries.Query7_Toggle_MenuItem_Status)
+		utils.Fatal(fmt.Errorf("Error applying seventh migration: %v", err), err)
+		fmt.Println("Migrated to version 7")
+
+	case 8:
+		_, err := DB.Exec(queries.Query8_Change_Default_For_Item_Status)
+		utils.Fatal(fmt.Errorf("Error applying eighth migration: %v", err), err)
+		fmt.Println("Migrated to version 8")
 	}
 
 	_, err := DB.Exec(updateVersionInTable, schemaVersion)

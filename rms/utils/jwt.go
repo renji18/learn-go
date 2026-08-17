@@ -7,10 +7,11 @@ import (
 )
 
 type JwtClaims struct {
-	Name       string `json:"name"`
-	UserId     string `json:"user_id"`
-	IsAdmin    bool   `json:"is_admin"`
-	IsVerified bool   `json:"is_verified"`
+	Name         string `json:"name"`
+	UserId       string `json:"user_id"`
+	IsAdmin      bool   `json:"is_admin"`
+	IsVerified   bool   `json:"is_verified"`
+	RestaurantId string `json:"restaurant_id"`
 	jwt.RegisteredClaims
 }
 

@@ -34,6 +34,7 @@ type MenuItem struct {
 	Name         string  `json:"name"`
 	Category     string  `json:"category"`
 	Price        float64 `json:"price"`
+	Available    bool    `json:"available"`
 	CreatedAt    string  `json:"created_at"`
 	RestaurantId string  `json:"restaurant_id"`
 }

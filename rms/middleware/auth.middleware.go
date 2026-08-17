@@ -17,36 +17,36 @@ func AuthMiddleware(next http.Handler, partialCheck bool, superAdminRoute bool) 
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		cookie, err := r.Cookie(utils.Config.ACCESS_COOKIE_NAME)
 		if err != nil {
-			utils.SendJson(w, 401, "Error accessing cookie: "+err.Error(), nil, nil)
+			utils.SendJson(w, 401, "Error accessing cookie: "+err.Error(), nil)
 			return
 		}
 
 		claims, err := utils.ParseToken(cookie.Value)
 		if err != nil {
-			utils.SendJson(w, 401, err.Error(), nil, nil)
+			utils.SendJson(w, 401, err.Error(), nil)
 			return
 		}
 
 		if !claims.IsVerified && !partialCheck {
-			utils.SendJson(w, 401, "Please verify otp before proceeding", nil, nil)
+			utils.SendJson(w, 401, "Please verify otp before proceeding", nil)
 			return
 		}
 
 		if !partialCheck {
 			// get access_token from redis
 			if accessTokenFromRedis, err := redis.GetRedis("access_token" + claims.UserId); err != nil {
-				utils.SendJson(w, 401, err.Error(), nil, nil)
+				utils.SendJson(w, 401, err.Error(), nil)
 				return
 			} else {
 				if cookie.Value != accessTokenFromRedis {
-					utils.SendJson(w, 401, "Invalid token provided", nil, nil)
+					utils.SendJson(w, 401, "Invalid token provided", nil)
 					return
 				}
 			}
 		}
 
 		if superAdminRoute && !claims.IsAdmin {
-			utils.SendJson(w, 401, "Unauthorized route", nil, nil)
+			utils.SendJson(w, 401, "Unauthorized route", nil)
 			return
 		}
 

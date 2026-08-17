@@ -21,13 +21,15 @@ func login(body LoginDto) (accessToken string, expirationTime time.Time, statusC
 	}
 
 	var user schema.User
+	var restaurantId sql.NullString
 	// get user with email
 	if err := database.DB.QueryRow(`
-			SELECT u.id, u.email, u.is_admin, a.password, a.is_active
+			SELECT u.id, u.email, u.is_admin, a.password, a.is_active, r.id
 			FROM users u
 			LEFT JOIN auth a ON u.id = a.user_id
+			LEFT JOIN restaurant r ON u.id = r.owner_id
 			WHERE email = $1;
-		`, body.Email).Scan(&user.Id, &user.Email, &user.IsAdmin, &user.Auth.Password, &user.Auth.IsActive); err != nil {
+		`, body.Email).Scan(&user.Id, &user.Email, &user.IsAdmin, &user.Auth.Password, &user.Auth.IsActive, &restaurantId); err != nil {
 		var errMessage = "Error fetching user from db: " + err.Error()
 
 		if err == sql.ErrNoRows {
@@ -50,10 +52,11 @@ func login(body LoginDto) (accessToken string, expirationTime time.Time, statusC
 	expirationTime = time.Now().Add(time.Minute * 5)
 
 	claims := &utils.JwtClaims{
-		Name:       user.Name,
-		UserId:     user.Id,
-		IsAdmin:    user.IsAdmin,
-		IsVerified: false,
+		Name:         user.Name,
+		UserId:       user.Id,
+		IsAdmin:      user.IsAdmin,
+		RestaurantId: restaurantId.String,
+		IsVerified:   false,
 		RegisteredClaims: jwt.RegisteredClaims{
 			ExpiresAt: jwt.NewNumericDate(expirationTime),
 			IssuedAt:  jwt.NewNumericDate(time.Now()),
@@ -70,7 +73,7 @@ func login(body LoginDto) (accessToken string, expirationTime time.Time, statusC
 	otp := utils.GenerateOtp()
 	fmt.Println(otp, "otp")
 
-	// go store otp in redis
+	// store otp in redis
 	err = redis.SetRedis("otp"+user.Id, otp, time.Minute*5)
 	if err != nil {
 		return "", time.Now(), 500, err.Error()
@@ -105,10 +108,11 @@ func verifyOtp(otp string, claims *utils.JwtClaims) (accessToken, refreshToken s
 	refreshExpiry = time.Now().Add(time.Hour * 24 * 30)
 
 	acessClaim := &utils.JwtClaims{
-		Name:       claims.Name,
-		UserId:     claims.UserId,
-		IsAdmin:    claims.IsAdmin,
-		IsVerified: true,
+		Name:         claims.Name,
+		UserId:       claims.UserId,
+		IsAdmin:      claims.IsAdmin,
+		RestaurantId: claims.RestaurantId,
+		IsVerified:   true,
 		RegisteredClaims: jwt.RegisteredClaims{
 			ExpiresAt: jwt.NewNumericDate(accessExpiry),
 			IssuedAt:  jwt.NewNumericDate(time.Now()),
@@ -156,15 +160,18 @@ func verifyOtp(otp string, claims *utils.JwtClaims) (accessToken, refreshToken s
 }
 
 func refreshToken(refreshTokenString string, claims *utils.JwtClaims) (accessToken, refreshToken string, accessExpiry, refreshExpiry time.Time, statusCode int, message string, success bool) {
-	// get refresh token from db
+	// get refresh token and user data from db
+	var user schema.User
+	var restaurantId sql.NullString
 	var refreshTokenFromDb sql.NullString
 
 	if err := database.DB.QueryRow(`
-			SELECT a.refresh_token
+			SELECT u.id, u.email, u.is_admin, a.is_active, r.id, a.refresh_token
 			FROM users u
 			LEFT JOIN auth a ON u.id = a.user_id
+			LEFT JOIN restaurant r ON u.id = r.owner_id
 			WHERE u.id = $1
-		`, claims.UserId).Scan(&refreshTokenFromDb); err != nil {
+		`, claims.UserId).Scan(&user.Id, &user.Email, &user.IsAdmin, &user.Auth.IsActive, &restaurantId, &refreshTokenFromDb); err != nil {
 		var errMessage = "Error fetching restaurant from db: " + err.Error()
 
 		if err == sql.ErrNoRows {
@@ -178,7 +185,7 @@ func refreshToken(refreshTokenString string, claims *utils.JwtClaims) (accessTok
 		return "", "", time.Now(), time.Now(), 500, "No refresh token found.", false
 	}
 
-	// validate if it is correct
+	// validate if it is correct, but not authorized
 	if refreshTokenFromDb.String != refreshTokenString {
 		return "", "", time.Now(), time.Now(), 500, "Invalid refresh token", false
 	}
@@ -188,10 +195,11 @@ func refreshToken(refreshTokenString string, claims *utils.JwtClaims) (accessTok
 	refreshExpiry = time.Now().Add(time.Hour * 24 * 30)
 
 	acessClaim := &utils.JwtClaims{
-		Name:       claims.Name,
-		UserId:     claims.UserId,
-		IsAdmin:    claims.IsAdmin,
-		IsVerified: true,
+		Name:         user.Name,
+		UserId:       user.Id,
+		IsAdmin:      user.IsAdmin,
+		RestaurantId: restaurantId.String,
+		IsVerified:   true,
 		RegisteredClaims: jwt.RegisteredClaims{
 			ExpiresAt: jwt.NewNumericDate(accessExpiry),
 			IssuedAt:  jwt.NewNumericDate(time.Now()),

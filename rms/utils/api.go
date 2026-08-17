@@ -28,7 +28,7 @@ func SetCookie(w http.ResponseWriter, name, token string, expiry time.Time) {
 // Returns true if no body else false
 func ValidateBody(w http.ResponseWriter, reqBody io.ReadCloser) bool {
 	if reqBody == nil {
-		SendJson(w, 400, "Body not provided", nil, nil)
+		SendJson(w, 400, "Body not provided", nil)
 		return true
 	}
 
@@ -38,7 +38,7 @@ func ValidateBody(w http.ResponseWriter, reqBody io.ReadCloser) bool {
 // Get paramter and return true if found, else false
 func GetParam(w http.ResponseWriter, r *http.Request, search string) (string, bool) {
 	if found := r.PathValue(search); found == "" {
-		SendJson(w, 400, "Path variable "+search+" not found", nil, nil)
+		SendJson(w, 400, "Path variable "+search+" not found", nil)
 		return "", false
 	} else {
 		return found, true
@@ -46,14 +46,8 @@ func GetParam(w http.ResponseWriter, r *http.Request, search string) (string, bo
 }
 
 // Write json response, Returns true if error parsing json else false
-func SendJson(w http.ResponseWriter, statusCode int, message string, data any, headers map[string]string) {
-	if headers == nil {
-		w.Header().Set("Content-Type", "application/json")
-	} else {
-		for k, v := range headers {
-			w.Header().Set(k, v)
-		}
-	}
+func SendJson(w http.ResponseWriter, statusCode int, message string, data any) {
+	w.Header().Set("Content-Type", "application/json")
 
 	w.WriteHeader(statusCode)
 
