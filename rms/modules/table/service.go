@@ -124,6 +124,99 @@ func deleteTable(restaurantId, tableId string) (statusCode int, message string) 
 	return 200, "Table deleted successfully"
 }
 
-func occupyTable() {}
+func occupyTable(restaurantId, tableId string) (statusCode int, message string) {
+	// verify table and get current status
+	var currentTableStatus sql.NullBool
+	if err := database.DB.QueryRow(`
+			SELECT occupied
+			FROM r_table
+			WHERE restaurant_id = $1 AND id = $2;
+		`, restaurantId, tableId).Scan(&currentTableStatus); err != nil {
+		errMessage := "Error fetching item from db: " + err.Error()
 
-func freeTable() {}
+		if err == sql.ErrNoRows {
+			return 404, "No table found for the restaurant"
+		}
+
+		return 500, errMessage
+	}
+
+	if !currentTableStatus.Valid {
+		return 404, "Table not found"
+	}
+
+	if currentTableStatus.Bool {
+		return 409, "Table is already occupied"
+	}
+
+	// update status
+	if res, err := database.DB.Exec(`
+			UPDATE r_table
+			SET occupied = true
+			WHERE id = $1;
+		`, tableId); err != nil {
+		return 500, "Error updating record in db: " + err.Error()
+	} else if rowsAffected, _ := res.RowsAffected(); rowsAffected == 0 {
+		return 404, "No such table found for this restaurant"
+	}
+
+	// return
+	return 200, "Table is now occupied"
+
+}
+
+func reserveTable(restaurantId, tableId string) (statusCode int, message string) {
+	// verify table and get current status
+	var currentTableStatus sql.NullBool
+	if err := database.DB.QueryRow(`
+			SELECT reserved
+			FROM r_table
+			WHERE restaurant_id = $1 AND id = $2 AND occupied = false;
+		`, restaurantId, tableId).Scan(&currentTableStatus); err != nil {
+		errMessage := "Error fetching item from db: " + err.Error()
+
+		if err == sql.ErrNoRows {
+			return 404, "No table found for the restaurant"
+		}
+
+		return 500, errMessage
+	}
+
+	if !currentTableStatus.Valid {
+		return 404, "Table not found"
+	}
+
+	if currentTableStatus.Bool {
+		return 409, "Table is already reserved"
+	}
+
+	// update status
+	if res, err := database.DB.Exec(`
+			UPDATE r_table
+			SET reserved = true
+			WHERE id = $1;
+		`, tableId); err != nil {
+		return 500, "Error updating record in db: " + err.Error()
+	} else if rowsAffected, _ := res.RowsAffected(); rowsAffected == 0 {
+		return 404, "No such table found for this restaurant"
+	}
+
+	// return
+	return 200, "Table is now reserved"
+}
+
+func freeTable(restaurantId, tableId string) (statusCode int, message string) {
+	// update status
+	if res, err := database.DB.Exec(`
+			UPDATE r_table
+			SET occupied = false AND reserved = false
+			WHERE id = $1 AND restaurant_id = $2;
+		`, tableId, restaurantId); err != nil {
+		return 500, "Error updating record in db: " + err.Error()
+	} else if rowsAffected, _ := res.RowsAffected(); rowsAffected == 0 {
+		return 404, "No such table found for this restaurant"
+	}
+
+	// return
+	return 200, "Table is now free"
+}

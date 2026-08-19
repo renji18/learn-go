@@ -102,6 +102,56 @@ func DeleteTable(w http.ResponseWriter, r *http.Request) {
 	utils.SendJson(w, statusCode, message, nil)
 }
 
-func OccupyTable(w http.ResponseWriter, r *http.Request) {}
+func OccupyTable(w http.ResponseWriter, r *http.Request) {
+	tableId, found := utils.GetParam(w, r, "tableId")
+	if !found {
+		utils.SendJson(w, 502, "Missing tableId", nil)
+		return
+	}
 
-func FreeTable(w http.ResponseWriter, r *http.Request) {}
+	claims, err := middleware.GetClaims(r.Context())
+	if err != nil {
+		utils.SendJson(w, 500, "Unauthorized: Not logged in", nil)
+		return
+	}
+
+	statusCode, message := occupyTable(tableId, claims.RestaurantId)
+
+	utils.SendJson(w, statusCode, message, nil)
+}
+
+func ReserveTable(w http.ResponseWriter, r *http.Request) {
+	tableId, found := utils.GetParam(w, r, "tableId")
+	if !found {
+		utils.SendJson(w, 502, "Missing tableId", nil)
+		return
+	}
+
+	claims, err := middleware.GetClaims(r.Context())
+	if err != nil {
+		utils.SendJson(w, 500, "Unauthorized: Not logged in", nil)
+		return
+	}
+
+	statusCode, message := reserveTable(tableId, claims.RestaurantId)
+
+	utils.SendJson(w, statusCode, message, nil)
+}
+
+func FreeTable(w http.ResponseWriter, r *http.Request) {
+	tableId, found := utils.GetParam(w, r, "tableId")
+	if !found {
+		utils.SendJson(w, 502, "Missing tableId", nil)
+		return
+	}
+
+	claims, err := middleware.GetClaims(r.Context())
+	if err != nil {
+		utils.SendJson(w, 500, "Unauthorized: Not logged in", nil)
+		return
+	}
+
+	statusCode, message := freeTable(tableId, claims.RestaurantId)
+
+	utils.SendJson(w, statusCode, message, nil)
+}

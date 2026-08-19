@@ -115,7 +115,6 @@ func toggleMenuItem(restaurantId, itemId string) (statusCode int, message string
 	}
 
 	// update item in db
-
 	if res, err := database.DB.Exec(`
 			UPDATE menu_item
 			SET available = $3
